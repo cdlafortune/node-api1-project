@@ -1,59 +1,96 @@
-const express = require('express');
+const express = require("express");
 const db = require("./database");
 const server = express();
 // const shortid = require('shortid');
 
 server.use(express.json());
 
-server.get('/', (req, res) => {
-    res.json('Hello from express!');
+server.get("/", (req, res) => {
+  res.json("Hello from express!");
 });
 
-server.get('/users', (req, res) => {
-    //gets list of users
-    const users = db.getUsers();
-    res.json(users);
+server.get("/users", (req, res) => {
+  //gets list of users
+  const users = db.getUsers();
+  res.json(users);
 });
 
-server.get('/users/:id', (req, res) => {
-    //get users by ID
-    const id = req.params.id;
-    const user = db.getUserById(id);
+server.get("/users/:id", (req, res) => {
+  //get users by ID
+  const id = req.params.id;
+  const user = db.getUserById(id);
 
-    if (user) {
-        res.json(user);
-    } else {
-        res.status(404).json({message: 'User not found.'});
-    }
+  if (user) {
+    res.json(user);
+  } else {
+    res.status(404).json({ message: "User not found." });
+  }
 });
-
 
 //create user
-server.post('/users', (req, res) => {
+server.post("/users", (req, res) => {
+  if (!req.body.name || !req.body.bio) {
+    res
+      .status(400)
+      .json({ errorMessage: "Please provide name and bio for the user." });
+    return;
+  }
+
+  try {
     const newUser = db.createUser({
-        id: req.body.id,
-        name: req.body.name,
-        bio: req.body.bio,
+      // id: req.body.id,
+      name: req.body.name,
+      bio: req.body.bio,
     });
 
-    req.status(201).json(newUser);
+    res.status(201).json(newUser);
+  } catch {
+    res
+      .status(500)
+      .json({
+        errorMessage:
+          "There was an error while saving the user to the database",
+      });
+  }
+});
+
+//edit user
+server.put("/users/:id", (req, res) => {
+  const user = db.getUserById(req.params.id);
+
+  if (!req.body.name || !req.body.bio) {
+    res
+      .status(400)
+      .json({ errorMessage: "Please provide name and bio for the user." });
+    return;
+  }
+
+  try {
+    if (user) {
+      const updatedUser = db.updateUser(req.params.id, req.body);
+      res.status(200).json(updatedUser);
+    } else {
+      res.status(404).json({ message: "User not found." });
+    }
+  } catch {
+    res
+      .status(500)
+      .json({ errorMessage: "The user information could not be modified." });
+  }
 });
 
 //delete user
-server.delete('/users/:id', (req, res) => {
-    const user = db.getUserById(req.params.id);
+server.delete("/users/:id", (req, res) => {
+  const user = db.getUserById(req.params.id);
 
-    if (user) {
-        db.deleteUser(req.params.id);
-        res.status(204).end();
-    } else {
-        res.status(404).json({message: 'User not found.'});
-    }
-})
-
-
-
-server.listen(5000, () => {
-    console.log('Server is running on http://localhost:5000');
+  if (user) {
+    db.deleteUser(req.params.id);
+    res.status(204).end();
+  } else {
+    res.status(404).json({ message: "User not found." });
+  }
 });
 
+server.listen(5000, () => {
+  console.log("Server is running on http://localhost:5000");
+});

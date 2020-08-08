@@ -21,18 +21,22 @@ function getUsers(){
 };
 
 function getUserById(id){
-    return users.find(user => user.id === id);
+    return users.find(user => user.id.toString() === id.toString());
 };
 
 function createUser(obj){
     const payload = {
         id: String(users.length + 1),
-        ...data,
+        ...obj,
     };
+    
+    users.push(payload);
+
+    return payload;
 };
 
 function updateUser(id, data){
-    const index = users.findIndex(el => el.id === id);
+    const index = users.findIndex(el => el.id.toString() === id.toString());
 
     users[index] = {
         ...users[index],
@@ -43,10 +47,11 @@ function updateUser(id, data){
 };
 
 function deleteUser(id){
-    users = users.filter(el => el.id != id);
+    users = users.filter(el => el.id.toString() !== id.toString());
 };
 
 module.exports = {
+    users,
     getUsers,
     getUserById,
     createUser,
